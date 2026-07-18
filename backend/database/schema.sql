@@ -38,6 +38,7 @@ CREATE TABLE document_chunks (
         ON DELETE CASCADE,
     chunk_index INT NOT NULL,
     chunk_text TEXT NOT NULL,
+    embedding vector(384),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (document_id, chunk_index)
 );

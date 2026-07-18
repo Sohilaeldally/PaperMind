@@ -10,5 +10,5 @@ class DocumentChunk:
     chunk_index: int
     chunk_text: str
     created_at: datetime | None = None
-
+    embedding: list[float] | None = None
 
