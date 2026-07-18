@@ -1,5 +1,9 @@
 from psycopg_pool import ConnectionPool
 from app.config.settings import settings
+from pgvector.psycopg import register_vector
+
+def configure_connection(conn):
+    return register_vector(conn)
 
 
 pool = ConnectionPool(
@@ -12,4 +16,5 @@ pool = ConnectionPool(
     ),
     min_size=2,
     max_size=10,
+    configure=configure_connection
 )

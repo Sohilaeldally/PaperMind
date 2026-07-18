@@ -1,4 +1,3 @@
-import uuid
 from uuid import UUID
 from app.db.database import pool
 from app.models.document_chunk import DocumentChunk
@@ -10,14 +9,13 @@ def insert_chunks(document_id: UUID, chunks: list[str]) -> list[DocumentChunk]:
     with pool.connection() as conn:
         with conn.cursor() as cursor:
             for index, chunk_text in enumerate(chunks):
-                chunk_id = uuid.uuid4()
                 cursor.execute(
                     """
                     INSERT INTO document_chunks (id, document_id, chunk_index, chunk_text)
-                    VALUES (%s, %s, %s, %s)
+                    VALUES (gen_random_uuid(), %s, %s, %s)
                     RETURNING id, document_id, chunk_index, chunk_text, created_at
                     """,
-                    (chunk_id, document_id, index, chunk_text),
+                    (document_id, index, chunk_text),
                 )
                 row = cursor.fetchone()
                 inserted_chunks.append(
@@ -57,3 +55,16 @@ def get_chunks_by_document_id(document_id: UUID) -> list[DocumentChunk]:
         )
         for row in rows
     ]
+
+
+def update_chunk_embedding(chunk_id: UUID, embedding: list[float]) -> None:
+    with pool.connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE document_chunks
+                SET embedding = %s
+                WHERE id = %s
+                """,
+                (embedding, chunk_id),
+            )
