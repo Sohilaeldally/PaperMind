@@ -14,6 +14,12 @@ def generate_embeddings(chunks: list[str]) -> list[list[float]]:
     return embeddings.tolist()
 
 
+def generate_query_embedding(query: str) -> list[float]:
+    prefixed_query = f"query: {query}"
+    embedding = _model.encode(prefixed_query, normalize_embeddings=True)
+    return embedding.tolist()
+
+
 def process_embedding(document_id: UUID) -> None:
     chunks = get_chunks_by_document_id(document_id)
     if not chunks:

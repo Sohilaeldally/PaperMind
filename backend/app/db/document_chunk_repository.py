@@ -68,3 +68,34 @@ def update_chunk_embedding(chunk_id: UUID, embedding: list[float]) -> None:
                 """,
                 (embedding, chunk_id),
             )
+
+
+def search_similar_chunks(query_embedding: list[float], top_k: int = 5) -> list[tuple[DocumentChunk, float]]:
+    with pool.connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, document_id, chunk_index, chunk_text, created_at,
+                       embedding <=> %s AS distance
+                FROM document_chunks
+                WHERE embedding IS NOT NULL
+                ORDER BY distance ASC
+                LIMIT %s
+                """,
+                (query_embedding, top_k),
+            )
+            rows = cursor.fetchall()
+
+    return [
+        (
+            DocumentChunk(
+                id=row[0],
+                document_id=row[1],
+                chunk_index=row[2],
+                chunk_text=row[3],
+                created_at=row[4],
+            ),
+            row[5],  # distance
+        )
+        for row in rows
+    ]

@@ -8,4 +8,4 @@ def home():
     return {"message": "Welcome to DocMind-AI!"}
 
 app.include_router(documents_router)
-
+app.include_router(search_router)
