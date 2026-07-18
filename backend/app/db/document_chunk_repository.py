@@ -76,13 +76,13 @@ def search_similar_chunks(query_embedding: list[float], top_k: int = 5) -> list[
             cursor.execute(
                 """
                 SELECT id, document_id, chunk_index, chunk_text, created_at,
-                       embedding <=> %s AS distance
+                       embedding <=> %s::vector AS distance
                 FROM document_chunks
                 WHERE embedding IS NOT NULL
                 ORDER BY distance ASC
                 LIMIT %s
                 """,
-                (query_embedding, top_k),
+                (str(query_embedding), top_k),
             )
             rows = cursor.fetchall()
 
