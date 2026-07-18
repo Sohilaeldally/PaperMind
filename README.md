@@ -1,1 +1,1 @@
-# DocMindAI
+# PaperMind
