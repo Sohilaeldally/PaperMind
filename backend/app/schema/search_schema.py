@@ -10,3 +10,13 @@ class SearchResult(BaseModel):
     chunk_index: int
     text: str
     distance: float
+
+class SearchInfo(BaseModel):
+    chunk_id: str
+    document_id: str
+    chunk_index: int
+    distance: float
+
+class AskResponse(BaseModel):
+    answer: str
+    sources: list[SearchInfo]
