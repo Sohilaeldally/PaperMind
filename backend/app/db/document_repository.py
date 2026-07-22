@@ -100,3 +100,32 @@ def update_document_status(document_id: UUID, status: DocumentStatus, error_mess
         created_at=row[7],
         updated_at=row[8],
     )
+
+
+def get_all_documents() -> list[Document]:
+    with pool.connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, original_name, stored_name, content_type,
+                       file_size, status, error_message, created_at, updated_at
+                FROM documents
+                ORDER BY created_at DESC
+                """
+            )
+            rows = cursor.fetchall()
+
+    return [
+        Document(
+            id=row[0],
+            original_name=row[1],
+            stored_name=row[2],
+            content_type=row[3],
+            file_size=row[4],
+            status=DocumentStatus(row[5]),
+            error_message=row[6],
+            created_at=row[7],
+            updated_at=row[8],
+        )
+        for row in rows
+    ]
