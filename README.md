@@ -10,5 +10,5 @@ A specialized RAG (Retrieval-Augmented Generation) system for understanding and 
 - ✅ Chunking
 - ✅ Embedding (multilingual-e5-small + pgvector)
 - ✅ Search Endpoint
-- 🔲 RAG (Question → Answer)
+- ✅ RAG (Question → Answer)
 - 🔲 Structure-aware Chunking for academic papers
