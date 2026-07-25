@@ -3,7 +3,7 @@ import re
 import fitz
 from docx import Document as DocxDocument
 from app.models.pdf_line import PdfLine
-
+from app.models.document import DocumentType
 
 def try_docx_style_based(file_path: Path) -> list[tuple[str, str]] | None:
     doc = DocxDocument(file_path)
@@ -236,25 +236,25 @@ def try_regex_based(raw_text: str) -> list[tuple[str, str]] | None:
     return sections
 
 
+
 def detect_sections(
     file_path: Path,
     raw_text: str,
     content_type: str,
 ) -> list[tuple[str, str]] | None:
 
-    content_type = content_type.lower()
+    try:
+        doc_type = DocumentType(content_type)
+    except ValueError:
+        doc_type = None
 
-    if "docx" in content_type:
-
+    if doc_type == DocumentType.DOCX:
         sections = try_docx_style_based(file_path)
-
         if sections:
             return sections
 
-    if "pdf" in content_type:
-
+    if doc_type == DocumentType.PDF:
         sections = try_pdf_font_based(file_path)
-
         if sections:
             return sections
 

@@ -4,7 +4,7 @@ from pypdf import PdfReader
 from docx import Document as DocxDocument
 
 from app.config.settings import settings
-from app.models.document import DocumentStatus
+from app.models.document import DocumentStatus, DocumentType
 from app.db.document_repository import get_document_by_id, update_document_status
 from app.db.document_content_repository import insert_document_content
 
@@ -26,17 +26,19 @@ def _extract_from_txt(file_path: Path) -> str:
 
 
 PARSERS = {
-    "application/pdf": _extract_from_pdf,
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": _extract_from_docx,
-    "text/plain": _extract_from_txt,
+    DocumentType.PDF: _extract_from_pdf,
+    DocumentType.DOCX: _extract_from_docx,
+    DocumentType.TXT: _extract_from_txt,
 }
 
 
 def extract_text(file_path: Path, content_type: str) -> str:
-    parser = PARSERS.get(content_type)
-    if parser is None:
+    try:
+        doc_type = DocumentType(content_type)
+    except ValueError:
         raise ValueError(f"Unsupported content type for parsing: {content_type}")
-    return parser(file_path)
+
+    return PARSERS[doc_type](file_path)
 
 
 def process_document(document_id: UUID) -> None:

@@ -14,6 +14,12 @@ class DocumentStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
 
+class DocumentType(str, Enum):
+    PDF = "application/pdf"
+    DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    TXT = "text/plain"
+
+    
 @dataclass(slots=True)
 class Document:
     id: UUID
