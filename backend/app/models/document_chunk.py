@@ -9,6 +9,7 @@ class DocumentChunk:
     document_id: UUID
     chunk_index: int
     chunk_text: str
+    section_name: str | None = None
     created_at: datetime | None = None
     embedding: list[float] | None = None
 

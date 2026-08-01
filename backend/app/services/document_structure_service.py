@@ -8,6 +8,7 @@ from app.services.chunking_service import chunk_text
 
 
 
+
 ACADEMIC_HEADINGS = [
     "abstract","introduction","related work","related works","background","methodology","methods",
     "materials and methods","approach",    "model architecture","architecture","system design",
@@ -30,6 +31,28 @@ NUMBERED_HEADING_PATTERN = re.compile(
 MIN_SECTION_WORDS = 20
 
 SECTION_CHUNK_THRESHOLD = 500
+
+def is_heading_line(line: str) -> bool:
+
+    stripped = line.strip()
+
+    if not stripped:
+        return False
+
+    if len(stripped) > 60:
+        return False
+
+    if stripped.endswith((".", ",", ";")):
+        return False
+
+    if KNOWN_HEADING_PATTERN.match(stripped):
+        return True
+
+    if NUMBERED_HEADING_PATTERN.match(stripped):
+        return True
+
+    return False
+
 
 
 def try_docx_style_based(file_path: Path) -> list[tuple[str, str]] | None:
@@ -178,26 +201,6 @@ def try_pdf_font_based(file_path: Path) -> list[tuple[str, str]] | None:
 
 
 
-def is_heading_line(line: str) -> bool:
-
-    stripped = line.strip()
-
-    if not stripped:
-        return False
-
-    if len(stripped) > 60:
-        return False
-
-    if stripped.endswith((".", ",", ";")):
-        return False
-
-    if KNOWN_HEADING_PATTERN.match(stripped):
-        return True
-
-    if NUMBERED_HEADING_PATTERN.match(stripped):
-        return True
-
-    return False
 
 
 def try_regex_based(raw_text: str) -> list[tuple[str, str]] | None:
@@ -245,7 +248,7 @@ def try_regex_based(raw_text: str) -> list[tuple[str, str]] | None:
 
 
 
-def detect_sections(
+def get_sections(
     file_path: Path,
     raw_text: str,
     content_type: str,
@@ -319,3 +322,19 @@ def chunk_sections(sections: list[tuple[str, str]]) -> list[tuple[str, str]]:
                 chunks_with_section.append((title, sub_chunk))
 
     return chunks_with_section
+
+
+def chunk_document(
+    file_path: Path,
+    raw_text: str,
+    content_type: str,
+) -> list[tuple[str, str]]:
+
+    sections = get_sections(file_path, raw_text, content_type)
+
+    if sections is None:
+        chunks = chunk_text(raw_text)
+        return [(None, chunk) for chunk in chunks]
+
+    refined = refine_sections(sections)
+    return chunk_sections(refined)

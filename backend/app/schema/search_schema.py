@@ -12,6 +12,7 @@ class SearchResult(BaseModel):
     chunk_id: str
     document_id: str
     chunk_index: int
+    section_name: str | None
     text: str
     distance: float
 
@@ -20,6 +21,7 @@ class SourceInfo(BaseModel):
     chunk_id: str
     document_id: str
     chunk_index: int
+    section_name: str | None
     distance: float
 
 

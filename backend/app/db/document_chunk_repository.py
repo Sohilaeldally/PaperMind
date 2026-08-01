@@ -3,25 +3,28 @@ from app.db.database import pool
 from app.models.document_chunk import DocumentChunk
 
 
-def insert_chunks(document_id: UUID, chunks: list[str]) -> list[DocumentChunk]:
+def insert_chunks(
+    document_id: UUID,
+    chunks: list[tuple[str, str]],
+) -> list[DocumentChunk]:
     inserted_chunks = []
 
     with pool.connection() as conn:
         with conn.cursor() as cursor:
-            for index, chunk_text in enumerate(chunks):
+            for index, (section_name, chunk_text) in enumerate(chunks):
                 cursor.execute(
                     """
-                    INSERT INTO document_chunks (id, document_id, chunk_index, chunk_text)
-                    VALUES (gen_random_uuid(), %s, %s, %s)
-                    RETURNING id, document_id, chunk_index, chunk_text, created_at
+                    INSERT INTO document_chunks (id, document_id, chunk_index, chunk_text, section_name)
+                    VALUES (gen_random_uuid(), %s, %s, %s, %s)
+                    RETURNING id, document_id, chunk_index, chunk_text, section_name, created_at
                     """,
-                    (document_id, index, chunk_text),
+                    (document_id, index, chunk_text, section_name),
                 )
                 row = cursor.fetchone()
                 inserted_chunks.append(
                     DocumentChunk(
                         id=row[0], document_id=row[1], chunk_index=row[2],
-                        chunk_text=row[3], created_at=row[4],
+                        chunk_text=row[3], section_name=row[4], created_at=row[5],
                     )
                 )
 
@@ -33,7 +36,7 @@ def get_chunks_by_document_id(document_id: UUID) -> list[DocumentChunk]:
         with conn.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT id, document_id, chunk_index, chunk_text, created_at
+                SELECT id, document_id, chunk_index, chunk_text, section_name, created_at
                 FROM document_chunks
                 WHERE document_id = %s
                 ORDER BY chunk_index ASC
@@ -45,7 +48,7 @@ def get_chunks_by_document_id(document_id: UUID) -> list[DocumentChunk]:
     return [
         DocumentChunk(
             id=row[0], document_id=row[1], chunk_index=row[2],
-            chunk_text=row[3], created_at=row[4],
+            chunk_text=row[3], section_name=row[4], created_at=row[5],
         )
         for row in rows
     ]
@@ -70,7 +73,7 @@ def search_similar_chunks(
             if document_id is not None:
                 cursor.execute(
                     """
-                    SELECT id, document_id, chunk_index, chunk_text, created_at,
+                    SELECT id, document_id, chunk_index, chunk_text, section_name, created_at,
                            embedding <=> %s::vector AS distance
                     FROM document_chunks
                     WHERE embedding IS NOT NULL AND document_id = %s
@@ -82,7 +85,7 @@ def search_similar_chunks(
             else:
                 cursor.execute(
                     """
-                    SELECT id, document_id, chunk_index, chunk_text, created_at,
+                    SELECT id, document_id, chunk_index, chunk_text, section_name, created_at,
                            embedding <=> %s::vector AS distance
                     FROM document_chunks
                     WHERE embedding IS NOT NULL
@@ -97,9 +100,9 @@ def search_similar_chunks(
         (
             DocumentChunk(
                 id=row[0], document_id=row[1], chunk_index=row[2],
-                chunk_text=row[3], created_at=row[4],
+                chunk_text=row[3], section_name=row[4], created_at=row[5],
             ),
-            row[5],
+            row[6],
         )
         for row in rows
     ]

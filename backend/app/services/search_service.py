@@ -16,6 +16,7 @@ def search(query: str, document_id: UUID | None = None, top_k: int = 5):
             "chunk_id": str(chunk.id),
             "document_id": str(chunk.document_id),
             "chunk_index": chunk.chunk_index,
+            "section_name": chunk.section_name,
             "text": chunk.chunk_text,
             "distance": distance,
         }
@@ -33,6 +34,7 @@ def ask(query: str, document_id: UUID | None = None, top_k: int = 5) -> dict:
             "chunk_id": str(chunk.id),
             "document_id": str(chunk.document_id),
             "chunk_index": chunk.chunk_index,
+            "section_name": chunk.section_name,
             "distance": distance,
         }
         for chunk, distance in results
