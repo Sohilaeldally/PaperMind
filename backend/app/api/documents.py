@@ -1,10 +1,10 @@
 from uuid import UUID
-from fastapi import APIRouter, HTTPException,UploadFile, File,background_tasks
-from app.services.document_service import save_uploaded_file
+from fastapi import APIRouter, HTTPException, UploadFile, File, BackgroundTasks
 from app.services.parser_service import process_document
 from app.services.chunking_service import process_chunking
 from app.services.embedding_service import process_embedding
 from app.db.document_repository import get_all_documents,get_document_by_id
+from backend.app.services.document_service import save_uploaded_file
 
 
 router = APIRouter(prefix="/documents", tags=["Documents"])

@@ -17,6 +17,11 @@ export const getDocuments = async () => {
   return response.data;
 };
 
+export const getDocumentById = async (documentId) => {
+  const response = await axios.get(`${API_BASE_URL}/documents/${documentId}`);
+  return response.data;
+};
+
 export const askQuestion = async (query, documentId, topK = 5) => {
   const response = await axios.post(`${API_BASE_URL}/search/ask`, {
     query,
