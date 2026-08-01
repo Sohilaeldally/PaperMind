@@ -4,6 +4,33 @@ import fitz
 from docx import Document as DocxDocument
 from app.models.pdf_line import PdfLine
 from app.models.document import DocumentType
+from app.services.chunking_service import chunk_text
+
+
+
+ACADEMIC_HEADINGS = [
+    "abstract","introduction","related work","related works","background","methodology","methods",
+    "materials and methods","approach",    "model architecture","architecture","system design",
+    "implementation","experimental setup","experiments",    "experimental results","results",
+    "evaluation","discussion","analysis","conclusion","conclusions","future work","limitations",
+    "acknowledgments","acknowledgements","training","dataset","references","appendix","appendices",
+]
+
+KNOWN_HEADING_PATTERN = re.compile(
+    r"^\s*(?:\d+(?:\.\d+)?\.?\s*)?("
+    + "|".join(ACADEMIC_HEADINGS)
+    + r")\s*:?\s*$",
+    re.IGNORECASE,
+)
+
+NUMBERED_HEADING_PATTERN = re.compile(
+    r"^\s*\d+\.?\s+[A-Z][a-zA-Z\-]*(?:\s+[A-Za-z][a-zA-Z\-]*){0,5}\s*$"
+)
+
+MIN_SECTION_WORDS = 20
+
+SECTION_CHUNK_THRESHOLD = 500
+
 
 def try_docx_style_based(file_path: Path) -> list[tuple[str, str]] | None:
     doc = DocxDocument(file_path)
@@ -150,25 +177,6 @@ def try_pdf_font_based(file_path: Path) -> list[tuple[str, str]] | None:
     return sections
 
 
-ACADEMIC_HEADINGS = [
-    "abstract","introduction","related work","related works","background","methodology","methods",
-    "materials and methods","approach",    "model architecture","architecture","system design",
-    "implementation","experimental setup","experiments",    "experimental results","results",
-    "evaluation","discussion","analysis","conclusion","conclusions","future work","limitations",
-    "acknowledgments","acknowledgements","training","dataset","references","appendix","appendices",
-]
-
-KNOWN_HEADING_PATTERN = re.compile(
-    r"^\s*(?:\d+(?:\.\d+)?\.?\s*)?("
-    + "|".join(ACADEMIC_HEADINGS)
-    + r")\s*:?\s*$",
-    re.IGNORECASE,
-)
-
-NUMBERED_HEADING_PATTERN = re.compile(
-    r"^\s*\d+\.?\s+[A-Z][a-zA-Z\-]*(?:\s+[A-Za-z][a-zA-Z\-]*){0,5}\s*$"
-)
-
 
 def is_heading_line(line: str) -> bool:
 
@@ -248,12 +256,12 @@ def detect_sections(
     except ValueError:
         doc_type = None
 
-    if doc_type == DocumentType.DOCX:
+    if doc_type is DocumentType.DOCX:
         sections = try_docx_style_based(file_path)
         if sections:
             return sections
-
-    if doc_type == DocumentType.PDF:
+    
+    if doc_type is DocumentType.PDF:
         sections = try_pdf_font_based(file_path)
         if sections:
             return sections
@@ -264,3 +272,50 @@ def detect_sections(
         return sections
 
     return None
+
+
+
+def refine_sections(sections: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    cleaned = []
+    for title, text in sections:
+        cleaned_text = "\n".join(
+            line.strip() for line in text.split("\n") if line.strip()
+        )
+        if cleaned_text:
+            cleaned.append((title.strip(), cleaned_text))
+
+    if not cleaned:
+        return cleaned
+
+    merged = []
+    buffer_title, buffer_text = cleaned[0]
+
+    for title, text in cleaned[1:]:
+        if len(buffer_text.split()) < MIN_SECTION_WORDS:
+            buffer_text = buffer_text + "\n" + text
+        else:
+            merged.append((buffer_title, buffer_text))
+            buffer_title, buffer_text = title, text
+
+    if len(buffer_text.split()) < MIN_SECTION_WORDS and merged:
+        prev_title, prev_text = merged.pop()
+        merged.append((prev_title, prev_text + "\n" + buffer_text))
+    else:
+        merged.append((buffer_title, buffer_text))
+
+    return merged
+
+
+
+def chunk_sections(sections: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    chunks_with_section = []
+
+    for title, text in sections:
+        if len(text) <= SECTION_CHUNK_THRESHOLD:
+            chunks_with_section.append((title, text))
+        else:
+            sub_chunks = chunk_text(text)
+            for sub_chunk in sub_chunks:
+                chunks_with_section.append((title, sub_chunk))
+
+    return chunks_with_section
