@@ -90,6 +90,9 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .document-list li {
@@ -103,6 +106,7 @@ button:disabled {
   background: #fcfcfd;
   transition: all 0.15s ease;
 }
+
 
 .document-list li:hover {
   border-color: #4f6ef7;
