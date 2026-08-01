@@ -4,8 +4,7 @@ from app.db.document_content_repository import get_document_content
 from app.db.document_chunk_repository import insert_chunks
 from app.db.document_repository import get_document_by_id, update_document_status
 from app.models.document import DocumentStatus
-from backend.app.services.document_structure_service import chunk_document   
-
+from app.services.document_structure_service import chunk_document
 
 def chunk_text(text: str, chunk_size: int = 500, overlap: int = 100) -> list[str]:
     if overlap >= chunk_size:
