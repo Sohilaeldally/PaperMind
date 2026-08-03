@@ -4,8 +4,7 @@ import fitz
 from docx import Document as DocxDocument
 from app.models.pdf_line import PdfLine
 from app.models.document import DocumentType
-from app.services.chunking_service import chunk_text
-
+from app.services.fixed_size_chunking import chunk_text
 
 
 
