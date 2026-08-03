@@ -217,21 +217,21 @@ function App() {
 
         {askError && <p className="error">{askError}</p>}
 
-        {answer && (
-          <div className="answer-box">
-            <h3>Answer</h3>
-            <p>{answer.answer}</p>
+  {answer && (
+  <div className="answer-box">
+    <h3>Answer</h3>
+    <p>{answer.answer}</p>
 
-            <h4>Sources</h4>
-            <ul>
-              {answer.sources.map((source) => (
-                <li key={source.chunk_id}>
-                  Chunk #{source.chunk_index} (distance: {source.distance.toFixed(3)})
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+    <h4>Sources</h4>
+    <ul>
+      {[...new Set(answer.sources.map((s) => s.section_name || "General content"))].map(
+        (sectionName) => (
+          <li key={sectionName}>📍 {sectionName}</li>
+        )
+      )}
+    </ul>
+  </div>
+)}
       </section>
     </div>
   );
