@@ -5,17 +5,31 @@ from app.services.chunking_service import process_chunking
 from app.services.embedding_service import process_embedding
 from app.db.document_repository import get_all_documents,get_document_by_id
 from app.services.document_service import save_uploaded_file
-
+import logging
+from app.models.document import DocumentStatus
+from app.db.document_repository import update_document_status
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
+
+
+logger = logging.getLogger(__name__)
+
 
 def process_full_pipeline(document_id: UUID) -> None:
     try:
         process_document(document_id)
         process_chunking(document_id)
         process_embedding(document_id)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Pipeline failed for document {document_id}: {e}")
+        try:
+            update_document_status(
+                document_id,
+                status=DocumentStatus.FAILED,
+                error_message=str(e),
+            )
+        except Exception as inner_e:
+            logger.error(f"Failed to update status for {document_id}: {inner_e}")
 
 
 @router.post("/upload")

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { getDocuments, uploadDocument, askQuestion } from "./api";
+import { getDocuments, uploadDocument, askQuestion, getDocumentById } from "./api";
 import "./App.css";
+
+const ACTIVE_STATUSES = ["uploaded", "parsing", "parsed", "chunking", "chunked", "embedding"];
 
 function App() {
   const [documents, setDocuments] = useState([]);
@@ -21,6 +23,33 @@ function App() {
   useEffect(() => {
     loadDocuments();
   }, []);
+
+  useEffect(() => {
+    const hasActiveDocuments = documents.some((doc) =>
+      ACTIVE_STATUSES.includes(doc.status)
+    );
+
+    if (!hasActiveDocuments) return;
+
+    const interval = setInterval(async () => {
+      const activeDocs = documents.filter((doc) =>
+        ACTIVE_STATUSES.includes(doc.status)
+      );
+
+      const updates = await Promise.all(
+        activeDocs.map((doc) => getDocumentById(doc.id).catch(() => null))
+      );
+
+      setDocuments((prevDocs) =>
+        prevDocs.map((doc) => {
+          const updated = updates.find((u) => u && u.id === doc.id);
+          return updated ? { ...doc, ...updated } : doc;
+        })
+      );
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [documents]);
 
   const loadDocuments = async () => {
     try {
@@ -139,56 +168,56 @@ function App() {
         </div>
 
         <button onClick={handleUpload} disabled={!selectedFile || uploading}>
-          {uploading ? "Processing..." : "Upload"}
+          {uploading ? "Uploading..." : "Upload"}
         </button>
         {uploadError && <p className="error">{uploadError}</p>}
       </section>
 
       <section>
-  <h2>Uploaded Papers</h2>
-  {loading ? (
-    <p>Loading...</p>
-  ) : documents.length === 0 ? (
-    <p>No papers uploaded yet.</p>
-  ) : (
-    <ul className="document-list">
-      {documents.map((doc) => {
-        const isReady = doc.status === "completed";
-        const isFailed = doc.status === "failed";
-        const isSelectable = isReady;
+        <h2>Uploaded Papers</h2>
+        {loading ? (
+          <p>Loading...</p>
+        ) : documents.length === 0 ? (
+          <p>No papers uploaded yet.</p>
+        ) : (
+          <ul className="document-list">
+            {documents.map((doc) => {
+              const isReady = doc.status === "completed";
+              const isFailed = doc.status === "failed";
+              const isSelectable = isReady;
 
-        return (
-          <li
-            key={doc.id}
-            className={[
-              doc.id === selectedDocumentId ? "selected" : "",
-              isFailed ? "failed" : "",
-              !isSelectable ? "disabled" : "",
-            ].join(" ")}
-            onClick={() => isSelectable && handleSelectDocument(doc.id)}
-          >
-            <div className="document-info">
-              <span>{doc.original_name}</span>
-              {isFailed && (
-                <span className="failed-hint">
-                  Upload failed. Please try uploading again.
-                </span>
-              )}
-            </div>
+              return (
+                <li
+                  key={doc.id}
+                  className={[
+                    doc.id === selectedDocumentId ? "selected" : "",
+                    isFailed ? "failed" : "",
+                    !isSelectable ? "disabled" : "",
+                  ].join(" ")}
+                  onClick={() => isSelectable && handleSelectDocument(doc.id)}
+                >
+                  <div className="document-info">
+                    <span>{doc.original_name}</span>
+                    {isFailed && (
+                      <span className="failed-hint">
+                        Something went wrong while processing this file. Please try uploading it again.
+                      </span>
+                    )}
+                  </div>
 
-            <span
-              className={`status-badge ${
-                isReady ? "status-ready" : isFailed ? "status-failed" : "status-processing"
-              }`}
-            >
-              {isReady ? "Ready" : isFailed ? "Failed" : "Processing..."}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
-  )}
-</section>
+                  <span
+                    className={`status-badge ${
+                      isReady ? "status-ready" : isFailed ? "status-failed" : "status-processing"
+                    }`}
+                  >
+                    {isReady ? "Ready" : isFailed ? "Failed" : "Processing..."}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
       <section className="ask-section">
         <h2>Ask a Question</h2>
@@ -217,21 +246,21 @@ function App() {
 
         {askError && <p className="error">{askError}</p>}
 
-  {answer && (
-  <div className="answer-box">
-    <h3>Answer</h3>
-    <p>{answer.answer}</p>
+        {answer && (
+          <div className="answer-box">
+            <h3>Answer</h3>
+            <p>{answer.answer}</p>
 
-    <h4>Sources</h4>
-    <ul>
-      {[...new Set(answer.sources.map((s) => s.section_name || "General content"))].map(
-        (sectionName) => (
-          <li key={sectionName}>📍 {sectionName}</li>
-        )
-      )}
-    </ul>
-  </div>
-)}
+            <h4>Sources</h4>
+            <ul>
+              {[...new Set(answer.sources.map((s) => s.section_name || "General content"))].map(
+                (sectionName) => (
+                  <li key={sectionName}>📍 {sectionName}</li>
+                )
+              )}
+            </ul>
+          </div>
+        )}
       </section>
     </div>
   );
