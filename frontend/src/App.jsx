@@ -4,6 +4,8 @@ import "./App.css";
 
 const ACTIVE_STATUSES = ["uploaded", "parsing", "parsed", "chunking", "chunked", "embedding"];
 
+
+
 function App() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +21,21 @@ function App() {
   const [askError, setAskError] = useState(null);
 
   const fileInputRef = useRef(null);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [hiddenDocumentIds, setHiddenDocumentIds] = useState([]);
+
+  const handleHideDocument = (documentId, event) => {
+  event.stopPropagation();
+  setHiddenDocumentIds((prev) => [...prev, documentId]);
+};
+
+const filteredDocuments = documents
+  .filter((doc) => !hiddenDocumentIds.includes(doc.id))
+  .filter((doc) =>
+    doc.original_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
 
   useEffect(() => {
     loadDocuments();
@@ -174,50 +191,68 @@ function App() {
       </section>
 
       <section>
-        <h2>Uploaded Papers</h2>
-        {loading ? (
-          <p>Loading...</p>
-        ) : documents.length === 0 ? (
-          <p>No papers uploaded yet.</p>
-        ) : (
-          <ul className="document-list">
-            {documents.map((doc) => {
-              const isReady = doc.status === "completed";
-              const isFailed = doc.status === "failed";
-              const isSelectable = isReady;
+  <h2>Uploaded Papers</h2>
 
-              return (
-                <li
-                  key={doc.id}
-                  className={[
-                    doc.id === selectedDocumentId ? "selected" : "",
-                    isFailed ? "failed" : "",
-                    !isSelectable ? "disabled" : "",
-                  ].join(" ")}
-                  onClick={() => isSelectable && handleSelectDocument(doc.id)}
-                >
-                  <div className="document-info">
-                    <span>{doc.original_name}</span>
-                    {isFailed && (
-                      <span className="failed-hint">
-                        Something went wrong while processing this file. Please try uploading it again.
-                      </span>
-                    )}
-                  </div>
+  <input
+    type="text"
+    className="search-input"
+    placeholder="Search papers by name..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+  />
 
-                  <span
-                    className={`status-badge ${
-                      isReady ? "status-ready" : isFailed ? "status-failed" : "status-processing"
-                    }`}
-                  >
-                    {isReady ? "Ready" : isFailed ? "Failed" : "Processing..."}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+  {loading ? (
+    <p>Loading...</p>
+  ) : filteredDocuments.length === 0 ? (
+    <p>No papers found.</p>
+  ) : (
+    <ul className="document-list">
+      {filteredDocuments.map((doc) => {
+        const isReady = doc.status === "completed";
+        const isFailed = doc.status === "failed";
+        const isSelectable = isReady;
+
+        return (
+          <li
+            key={doc.id}
+            className={[
+              doc.id === selectedDocumentId ? "selected" : "",
+              isFailed ? "failed" : "",
+              !isSelectable ? "disabled" : "",
+            ].join(" ")}
+            onClick={() => isSelectable && handleSelectDocument(doc.id)}
+          >
+            <div className="document-info">
+              <span>{doc.original_name}</span>
+              {isFailed && (
+                <span className="failed-hint">
+                  Something went wrong while processing this file. Please try uploading it again.
+                </span>
+              )}
+            </div>
+
+            <div className="document-actions">
+              <span
+                className={`status-badge ${
+                  isReady ? "status-ready" : isFailed ? "status-failed" : "status-processing"
+                }`}
+              >
+                {isReady ? "Ready" : isFailed ? "Failed" : "Processing..."}
+              </span>
+
+              <button
+                className="remove-btn"
+                onClick={(e) => handleHideDocument(doc.id, e)}
+              >
+                ✕
+              </button>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  )}
+</section>
 
       <section className="ask-section">
         <h2>Ask a Question</h2>
@@ -251,11 +286,11 @@ function App() {
             <h3>Answer</h3>
             <p>{answer.answer}</p>
 
-            <h4>Sources</h4>
+            <h4>Relevant sections</h4>
             <ul>
               {[...new Set(answer.sources.map((s) => s.section_name || "General content"))].map(
                 (sectionName) => (
-                  <li key={sectionName}>📍 {sectionName}</li>
+                  <li key={sectionName}> {sectionName}</li>
                 )
               )}
             </ul>
