@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getDocuments, uploadDocument, askQuestion, getDocumentById } from "./api";
 import "./App.css";
+import ReactMarkdown from "react-markdown";
 
 const ACTIVE_STATUSES = ["uploaded", "parsing", "parsed", "chunking", "chunked", "embedding"];
 
@@ -284,7 +285,9 @@ const filteredDocuments = documents
         {answer && (
           <div className="answer-box">
             <h3>Answer</h3>
-            <p>{answer.answer}</p>
+            <ReactMarkdown>
+             {answer.answer}
+            </ReactMarkdown>
 
             <h4>Relevant sections</h4>
             <ul>
