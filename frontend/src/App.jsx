@@ -29,13 +29,21 @@ function App() {
   const handleHideDocument = (documentId, event) => {
   event.stopPropagation();
   setHiddenDocumentIds((prev) => [...prev, documentId]);
+  
+   if (selectedDocumentId === documentId) {
+    setSelectedDocumentId(null);
+    setAnswer(null);
+    setAskError(null);
+  }
 };
+
 
 const filteredDocuments = documents
   .filter((doc) => !hiddenDocumentIds.includes(doc.id))
   .filter((doc) =>
     doc.original_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
 
 
   useEffect(() => {
