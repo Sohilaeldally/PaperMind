@@ -12,6 +12,11 @@ export const uploadDocument = async (file) => {
   return response.data;
 };
 
+export const deleteDocument = async (documentId) => {
+  const response = await axios.delete(`${API_BASE_URL}/documents/${documentId}`);
+  return response.data;
+};
+
 export const getDocuments = async () => {
   const response = await axios.get(`${API_BASE_URL}/documents/`);
   return response.data;

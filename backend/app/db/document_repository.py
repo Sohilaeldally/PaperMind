@@ -129,3 +129,11 @@ def get_all_documents() -> list[Document]:
         )
         for row in rows
     ]
+
+def delete_document(document_id: UUID) -> None:
+    with pool.connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM documents WHERE id = %s",
+                (document_id,),
+            )

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getDocuments, uploadDocument, askQuestion, getDocumentById } from "./api";
+import { getDocuments, uploadDocument, askQuestion, getDocumentById, deleteDocument } from "./api";
 import "./App.css";
 import ReactMarkdown from "react-markdown";
 
@@ -26,14 +26,21 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hiddenDocumentIds, setHiddenDocumentIds] = useState([]);
 
-  const handleHideDocument = (documentId, event) => {
+  const handleDeleteDocument = async (documentId, event) => {
   event.stopPropagation();
-  setHiddenDocumentIds((prev) => [...prev, documentId]);
-  
-   if (selectedDocumentId === documentId) {
-    setSelectedDocumentId(null);
-    setAnswer(null);
-    setAskError(null);
+
+  try {
+    await deleteDocument(documentId);
+    setDocuments((prev) => prev.filter((doc) => doc.id !== documentId));
+
+    if (selectedDocumentId === documentId) {
+      setSelectedDocumentId(null);
+      setAnswer(null);
+      setAskError(null);
+      setQuery("");
+    }
+  } catch (error) {
+    console.error("Delete failed:", error);
   }
 };
 
@@ -249,12 +256,10 @@ const filteredDocuments = documents
                 {isReady ? "Ready" : isFailed ? "Failed" : "Processing..."}
               </span>
 
-              <button
-                className="remove-btn"
-                onClick={(e) => handleHideDocument(doc.id, e)}
-              >
-                ✕
-              </button>
+          <button
+          className="remove-btn" onClick={(e) => handleDeleteDocument(doc.id, e)}>
+            ✕
+          </button>
             </div>
           </li>
         );

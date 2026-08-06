@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, BackgroundTasks
 from app.services.parser_service import process_document
 from app.services.chunking_service import process_chunking
 from app.services.embedding_service import process_embedding
-from app.db.document_repository import get_all_documents,get_document_by_id
+from app.db.document_repository import get_all_documents,get_document_by_id,delete_document
 from app.services.document_service import save_uploaded_file
 import logging
 from app.models.document import DocumentStatus
@@ -76,3 +76,12 @@ async def get_document(document_id: UUID):
         "created_at": document.created_at,
         "updated_at": document.updated_at,
     }
+
+@router.delete("/{document_id}")
+async def delete_document_endpoint(document_id: UUID):
+    document = get_document_by_id(document_id)
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    delete_document(document_id)
+    return {"message": "Document deleted successfully"}
