@@ -143,11 +143,12 @@ const filteredDocuments = documents
     }
   };
 
-  const handleSelectDocument = (documentId) => {
-    setSelectedDocumentId(documentId);
-    setAnswer(null);
-    setAskError(null);
-  };
+const handleSelectDocument = (documentId) => {
+  setSelectedDocumentId(documentId);
+  setAnswer(null);
+  setAskError(null);
+  setQuery("");
+};
 
   const handleAsk = async () => {
     if (!query.trim() || !selectedDocumentId) return;
