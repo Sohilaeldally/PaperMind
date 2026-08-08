@@ -102,6 +102,24 @@ def try_docx_style_based(file_path: Path) -> list[tuple[str, str]] | None:
     return sections
 
 
+import re
+from pathlib import Path
+import fitz
+from app.models.pdf_line import PdfLine
+
+NOISE_PATTERNS = [
+    re.compile(r"arxiv\s*:", re.IGNORECASE),
+    re.compile(r"^\d{1,2}\s+\w+\s+\d{4}$"),
+    re.compile(r"\[cs\.\w+\]"),
+    re.compile(r"^https?://"),
+    re.compile(r"^page\s+\d+", re.IGNORECASE),
+]
+
+
+def is_noise_line(text: str) -> bool:
+    return any(pattern.search(text) for pattern in NOISE_PATTERNS)
+
+
 def try_pdf_font_based(file_path: Path) -> list[tuple[str, str]] | None:
 
     doc = fitz.open(file_path)
@@ -166,6 +184,7 @@ def try_pdf_font_based(file_path: Path) -> list[tuple[str, str]] | None:
                 or line.bold
             )
             and len(line.text) < 80
+            and not is_noise_line(line.text)
         )
 
         if is_heading:
@@ -197,7 +216,6 @@ def try_pdf_font_based(file_path: Path) -> list[tuple[str, str]] | None:
         return None
 
     return sections
-
 
 
 

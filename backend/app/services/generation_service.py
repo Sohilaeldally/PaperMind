@@ -41,6 +41,8 @@ Formatting:
 - Do not number items unless the user explicitly asks for an ordered or ranked list.
 - If there is only one main point, answer in a normal paragraph.
 - Do not mention chunk numbers, embeddings, similarity scores, retrieval, vector search, or any internal implementation details.
+- When writing mathematical expressions or formulas, use LaTeX notation
+  (e.g., $\sqrt{d_k}$ for inline math, $$E = mc^2$$ for block/standalone equations).
 """
 
     user_prompt = f"""

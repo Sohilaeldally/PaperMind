@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { getDocuments, uploadDocument, askQuestion, getDocumentById, deleteDocument } from "./api";
 import "./App.css";
 import ReactMarkdown from "react-markdown";
-
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 const ACTIVE_STATUSES = ["uploaded", "parsing", "parsed", "chunking", "chunked", "embedding"];
 
 
@@ -299,9 +301,9 @@ const handleSelectDocument = (documentId) => {
         {answer && (
           <div className="answer-box">
             <h3>Answer</h3>
-            <ReactMarkdown>
-             {answer.answer}
-            </ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+           {answer.answer}
+          </ReactMarkdown>
 
             <h4>Relevant sections</h4>
             <ul>
